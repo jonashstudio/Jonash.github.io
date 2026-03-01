@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>J.R.G. // TACTICAL INTERFACE</title>
+    <title>J.R.G. // TACTICAL-OS</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
 
@@ -13,530 +13,529 @@
             --bg: #030303;
             --panel: #0a0a0a;
             --border: #1a1a1a;
-            --text-dim: #888;
+            --text-dim: #555;
             --text-bright: #fff;
             --mythic: #ff0055;
             --legendary: #ffaa00;
             --diamond: #b9f2ff;
-            --epic: #a335ee;
-            --rare: #0070dd;
-            --meta: #5ffb7e;
             --master: #ffeb3b;
         }
 
         * {
             box-sizing: border-box;
             cursor: crosshair;
+            margin: 0;
+            padding: 0;
         }
 
         body {
-            margin: 0;
-            padding: 0;
             background: var(--bg);
             color: var(--text-bright);
             font-family: 'Space Grotesk', sans-serif;
-            overflow-x: hidden;
+            overflow: hidden; /* Locked during boot */
             background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-            background-size: 40px 40px;
+                radial-gradient(circle at 50% 50%, #080808 0%, #030303 100%);
         }
 
-        /* --- Animations --- */
-        @keyframes scanIn {
-            0% { opacity: 0; transform: translateY(20px) scale(0.98); filter: brightness(2) blur(10px); }
-            100% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1) blur(0); }
+        /* --- Global Animations --- */
+        @keyframes slideInUp {
+            from { transform: translateY(50px); opacity: 0; filter: blur(10px); }
+            to { transform: translateY(0); opacity: 1; filter: blur(0); }
         }
 
-        @keyframes glitchLine {
-            0% { top: 0%; }
-            100% { top: 100%; }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 242, 255, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(0, 242, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 242, 255, 0); }
         }
 
-        /* --- UI Elements --- */
-        .frame {
+        @keyframes glitchSplit {
+            0% { clip-path: inset(50% 0 30% 0); transform: translate(-5px); }
+            10% { clip-path: inset(10% 0 85% 0); transform: translate(5px); }
+            20% { clip-path: inset(40% 0 43% 0); transform: translate(-5px); }
+            30% { clip-path: inset(80% 0 5% 0); transform: translate(5px); }
+            100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+        }
+
+        @keyframes textReveal {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        @keyframes terminalScroll {
+            from { transform: translateY(0); }
+            to { transform: translateY(-100%); }
+        }
+
+        /* --- UI Scan Overlay --- */
+        .scan-layer {
             position: fixed;
-            top: 20px; left: 20px; right: 20px; bottom: 20px;
-            border: 1px solid var(--border);
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, transparent 50%, rgba(0, 242, 255, 0.01) 50%);
+            background-size: 100% 4px;
+            z-index: 1000;
             pointer-events: none;
-            z-index: 100;
         }
 
-        .corner {
-            position: absolute;
-            width: 15px; height: 15px;
-            border: 2px solid var(--accent);
-            z-index: 101;
-        }
-        .top-l { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
-        .top-r { top: -1px; right: -1px; border-left: 0; border-bottom: 0; }
-        .bot-l { bottom: -1px; left: -1px; border-right: 0; border-top: 0; }
-        .bot-r { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
-
-        header {
-            margin: 80px 0 60px;
-            text-align: center;
+        /* --- NEW Boot Sequence --- */
+        #boot-screen {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.8s cubic-bezier(0.7, 0, 0.3, 1);
         }
 
-        h1 {
-            font-size: clamp(2rem, 8vw, 4rem);
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: -2px;
-            margin: 0;
-            line-height: 0.9;
-        }
-
-        .subtitle {
+        .boot-terminal {
+            width: 300px;
+            height: 150px;
+            overflow: hidden;
             font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6rem;
             color: var(--accent);
-            font-size: 0.8rem;
-            letter-spacing: 5px;
-            margin-top: 10px;
-            opacity: 0.8;
+            opacity: 0.7;
+            margin-bottom: 20px;
+            mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
         }
 
-        /* --- Cards --- */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 40px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 1px;
-            background: var(--border);
-            border: 1px solid var(--border);
+        .terminal-content {
+            animation: terminalScroll 3s linear infinite;
         }
 
-        .card {
-            background: var(--bg);
-            padding: 60px 40px;
-            transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+        .boot-logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.5rem;
+            letter-spacing: 8px;
+            color: #fff;
+            position: relative;
+            margin-bottom: 5px;
+        }
+
+        .boot-bar-wrap {
+            width: 200px;
+            height: 2px;
+            background: #111;
             position: relative;
             overflow: hidden;
         }
 
-        .card:hover {
-            background: var(--panel);
-        }
-
-        .card::before {
-            content: '';
+        .boot-bar-fill {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 2px;
+            left: 0; top: 0; height: 100%;
+            width: 0%;
             background: var(--accent);
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform 0.5s ease;
+            box-shadow: 0 0 10px var(--accent);
+            transition: width 0.1s linear;
         }
 
-        .card:hover::before {
-            transform: scaleX(1);
-        }
-
-        .card-num {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            color: var(--accent);
-            margin-bottom: 20px;
-            display: block;
-        }
-
-        .card h2 {
-            font-size: 2rem;
-            text-transform: uppercase;
-            margin: 0 0 15px 0;
-        }
-
-        .card p {
-            color: var(--text-dim);
-            line-height: 1.6;
-            margin-bottom: 30px;
-        }
-
-        .cta {
-            display: inline-block;
-            padding: 12px 24px;
-            border: 1px solid var(--border);
-            text-transform: uppercase;
-            font-size: 0.7rem;
-            letter-spacing: 2px;
-            transition: all 0.3s;
-        }
-
-        .card:hover .cta {
-            border-color: var(--accent);
-            background: var(--accent);
-            color: var(--bg);
-        }
-
-        /* --- Overlays --- */
-        .overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg);
-            z-index: 200;
-            display: none;
-            padding: 60px;
-            overflow-y: auto;
-        }
-
-        .overlay-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 20px;
-            margin-bottom: 40px;
-        }
-
-        .close-btn {
-            background: none;
-            border: 1px solid var(--border);
-            color: var(--text-bright);
-            padding: 10px 20px;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-size: 0.7rem;
-        }
-
-        .close-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-        /* --- Gaming Profile Specifics --- */
-        .terminal {
-            background: #050505;
-            border: 1px solid var(--border);
-            padding: 30px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
-        }
-
-        .terminal-header {
-            color: var(--accent);
-            margin-bottom: 20px;
-            border-bottom: 1px solid #111;
-            padding-bottom: 10px;
-        }
-
-        .ign-large {
-            font-size: 3rem;
-            font-weight: 700;
-            margin: 20px 0;
-            color: var(--accent);
-            text-shadow: 0 0 20px var(--accent-glow);
-        }
-
-        /* --- Weapon Cards --- */
-        .loadout-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 20px;
-        }
-
-        .weapon-box {
-            border: 1px solid var(--border);
-            padding: 25px;
-            background: var(--panel);
-            position: relative;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            opacity: 0;
-        }
-
-        .overlay[style*="display: block"] .weapon-box {
-            animation: scanIn 0.6s forwards;
-        }
-
-        .weapon-box:hover {
-            border-color: var(--accent);
-            background: #0d0d0d;
-            transform: scale(1.02);
-        }
-
-        .weapon-box::after {
-            content: '';
-            position: absolute;
-            left: 0; top: 0; width: 100%; height: 1px;
-            background: var(--accent);
+        #boot-screen.shutdown {
+            transform: scale(1.5);
+            filter: brightness(5) blur(20px);
             opacity: 0;
             pointer-events: none;
         }
 
-        .weapon-box:hover::after {
-            animation: glitchLine 2s linear infinite;
-            opacity: 0.5;
+        /* --- Main Interface --- */
+        #main-ui {
+            opacity: 0;
+            transform: scale(1.1);
+            filter: blur(10px);
+            transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .weapon-type {
-            font-size: 0.6rem;
-            color: var(--text-dim);
+        #main-ui.active {
+            opacity: 1;
+            transform: scale(1);
+            filter: blur(0);
+        }
+
+        header {
+            padding: 120px 20px 80px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: clamp(3rem, 15vw, 8rem);
+            font-weight: 700;
+            letter-spacing: -5px;
             text-transform: uppercase;
+            position: relative;
+            display: inline-block;
+        }
+
+        .h1-glitch::after {
+            content: 'J.R. GUEVARRA';
+            position: absolute;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background: var(--bg);
+            animation: glitchSplit 3s infinite alternate;
+            opacity: 0.5;
+            color: var(--accent);
+            z-index: -1;
+        }
+
+        /* --- Interactive Cards --- */
+        .grid-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .tactical-card {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            padding: 60px 40px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        #main-ui.active .tactical-card {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .tactical-card:nth-child(1) { transition-delay: 0.1s; }
+        .tactical-card:nth-child(2) { transition-delay: 0.2s; }
+        .tactical-card:nth-child(3) { transition-delay: 0.3s; }
+
+        .tactical-card:hover {
+            border-color: var(--accent);
+            background: #0f0f0f;
+            transform: translateY(-10px) scale(1.02);
+        }
+
+        .card-header {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--accent);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .card-header::after {
+            content: '';
+            height: 1px; flex-grow: 1;
+            background: linear-gradient(90deg, var(--accent), transparent);
+        }
+
+        .tactical-card h2 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            font-weight: 300;
             letter-spacing: 2px;
         }
 
-        .weapon-name {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin: 10px 0;
+        .btn-view {
+            margin-top: 30px;
+            padding: 12px 25px;
+            border: 1px solid #333;
+            display: inline-block;
             text-transform: uppercase;
-        }
-
-        .attachments {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 15px;
-        }
-
-        .att {
-            font-size: 0.6rem;
-            background: #000;
-            border: 1px solid #222;
-            padding: 4px 8px;
-            color: var(--text-dim);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .mythic-tag { border-left: 3px solid var(--mythic); }
-        .diamond-tag { border-left: 3px solid var(--diamond); }
-        .legendary-tag { border-left: 3px solid var(--legendary); }
-        .epic-tag { border-left: 3px solid var(--epic); }
-        .meta-tag { border-left: 3px solid var(--meta); }
-        .master-tag { border-left: 3px solid var(--master); }
-
-        footer {
-            text-align: center;
-            padding: 100px 40px;
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.7rem;
-            color: var(--text-dim);
-            letter-spacing: 3px;
+            letter-spacing: 2px;
+            position: relative;
+            transition: 0.3s;
         }
 
-        @media (max-width: 768px) {
-            .overlay { padding: 30px 20px; }
-            .container { padding: 0 20px; }
-            h1 { font-size: 3rem; }
+        .tactical-card:hover .btn-view {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        /* --- Fullscreen Overlay Section --- */
+        .view-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(3,3,3,0.98);
+            z-index: 2000;
+            display: none;
+            padding: 60px;
+            overflow-y: auto;
+            backdrop-filter: blur(15px);
+        }
+
+        .close-view {
+            position: fixed;
+            top: 40px; right: 40px;
+            background: var(--accent);
+            border: none;
+            color: #000;
+            padding: 10px 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+            cursor: pointer;
+            z-index: 2001;
+        }
+
+        /* --- Dynamic List --- */
+        .loadout-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 40px auto;
+        }
+
+        .weapon-entry {
+            background: #080808;
+            border: 1px solid #111;
+            padding: 25px;
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .weapon-entry.reveal {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .weapon-rank {
+            width: 4px; height: 30px;
+            margin-right: 15px;
+        }
+
+        .entry-flex { display: flex; align-items: center; margin-bottom: 15px; }
+
+        .attachment-tag {
+            font-size: 0.6rem;
+            background: #151515;
+            padding: 4px 8px;
+            margin: 2px;
+            display: inline-block;
+            border: 1px solid #222;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-dim);
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.4s ease;
+        }
+
+        .weapon-entry.reveal .attachment-tag {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .stat-bar-container {
+            width: 100%; height: 2px;
+            background: #111;
+            margin: 10px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0;
+            transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .animate-text {
+            overflow: hidden;
+            white-space: nowrap;
+            width: 0;
+        }
+
+        .view-overlay.active .animate-text {
+            animation: textReveal 1s steps(40, end) forwards;
+        }
+
+        .code-module {
+            background: #050505;
+            border: 1px dashed #333;
+            padding: 15px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            margin-top: 10px;
+            color: var(--accent);
+            position: relative;
+        }
+
+        .code-module::before {
+            content: 'COPY_ID';
+            position: absolute;
+            top: -10px; right: 10px;
+            background: var(--bg);
+            padding: 0 5px;
+            font-size: 0.5rem;
+            color: #555;
+        }
+
+        footer {
+            padding: 80px 20px;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6rem;
+            color: #222;
+            letter-spacing: 5px;
+        }
+
+        @media (max-width: 900px) {
+            .grid-container { grid-template-columns: 1fr; }
+            .view-overlay { padding: 20px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="frame">
-        <div class="corner top-l"></div>
-        <div class="corner top-r"></div>
-        <div class="corner bot-l"></div>
-        <div class="corner bot-r"></div>
-    </div>
+    <div class="scan-layer"></div>
 
-    <header>
-        <div class="subtitle">PROTOCOL // INITIALIZED</div>
-        <h1>J.R. GUEVARRA</h1>
-    </header>
-
-    <div class="container">
-        <!-- Card 01 -->
-        <div class="card" onclick="openOverlay('bio')">
-            <span class="card-num">01 // IDENTITY</span>
-            <h2>BIO</h2>
-            <p>Classified personnel data. Current status: Master III. Former Legendary veteran. Tactical objectives for J.R.G.</p>
-            <div class="cta">Expand Intel</div>
+    <!-- BOOT SEQUENCE -->
+    <div id="boot-screen">
+        <div class="boot-terminal">
+            <div class="terminal-content" id="term-logs">
+                [SYSTEM] INITIALIZING KERNEL...<br>
+                [USER] BOCHAZARD AUTHENTICATED<br>
+                [FILE] LOADING INFO.DAT...<br>
+                [FILE] LOADING GAMES.DAT...<br>
+                [FILE] LOADING LOADOUT.DAT...<br>
+                [OS] TACTICAL_SHELL ACTIVE<br>
+                [NET] SYNCING SENSITIVITY_CODES...<br>
+                [NET] SYNCING HUD_ARCH...<br>
+                [HW] NEURAL_LINK STABLE<br>
+                [OK] HANDSHAKE COMPLETE<br>
+                [OK] READY_TO_DEPLOY...
+            </div>
         </div>
-
-        <!-- Card 02 -->
-        <div class="card" onclick="openOverlay('gaming')">
-            <span class="card-num">02 // COMBAT</span>
-            <h2>GAMING</h2>
-            <p>Live feed from the frontlines. CODM Profile: <strong>bochazard</strong>. Ranked Master III performance stats.</p>
-            <div class="cta">Access Profile</div>
-        </div>
-
-        <!-- Card 03 -->
-        <div class="card" onclick="openOverlay('arsenal')">
-            <span class="card-num">03 // ARMORY</span>
-            <h2>LOADOUT</h2>
-            <p>Access the weapon systems vault. Mythic builds, Diamond completions, and technical attachments.</p>
-            <div class="cta">Open Vault</div>
+        <div class="boot-logo">JRG_OS</div>
+        <div class="boot-bar-wrap">
+            <div class="boot-bar-fill" id="boot-progress"></div>
         </div>
     </div>
 
-    <!-- BIO OVERLAY -->
-    <div id="bio" class="overlay">
-        <div class="overlay-header">
-            <div class="subtitle">DATA RECOVERY // JONASH</div>
-            <button class="close-btn" onclick="closeOverlay('bio')">Close</button>
+    <div id="main-ui">
+        <header>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--accent); margin-bottom: 10px;">[ U.ID: BOCHAZARD ]</div>
+            <h1 class="h1-glitch">J.R. GUEVARRA</h1>
+            <div style="margin-top: 20px; display: flex; justify-content: center; gap: 40px; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--text-dim);">
+                <span>STATUS: MASTER_III</span>
+                <span>PEAK: LEGENDARY</span>
+                <span>ROLE: SNIPER_MAIN</span>
+            </div>
+        </header>
+
+        <div class="grid-container">
+            <div class="tactical-card" onclick="openSection('info')">
+                <div class="card-header">FILE_01</div>
+                <h2>INFO</h2>
+                <p style="color: var(--text-dim); font-size: 0.9rem; line-height: 1.6;">Personnel bio-data and identification. 13-year-old high-tier operator profile.</p>
+                <div class="btn-view">Access File</div>
+            </div>
+
+            <div class="tactical-card" onclick="openSection('games')">
+                <div class="card-header">DATA_02</div>
+                <h2>GAMES</h2>
+                <p style="color: var(--text-dim); font-size: 0.9rem; line-height: 1.6;">Combat settings, HUD architecture, and sensitivity configuration.</p>
+                <div class="btn-view">View Specs</div>
+            </div>
+
+            <div class="tactical-card" onclick="openSection('loadout')">
+                <div class="card-header">VAULT_03</div>
+                <h2>LOADOUT</h2>
+                <p style="color: var(--text-dim); font-size: 0.9rem; line-height: 1.6;">Review specialized loadouts including Mythic and Legendary configurations.</p>
+                <div class="btn-view">Open Vault</div>
+            </div>
         </div>
-        <div style="max-width: 800px;">
-            <h2 style="font-size: 3rem; margin-bottom: 40px;">PERSONNEL FILE</h2>
-            <p style="font-size: 1.2rem; line-height: 1.8; color: var(--text-dim);">
-                Jonash R Guevarra is a young digital tactician. Operating at the intersection of high-speed gaming and technical precision, he has built a reputation for consistency in high-pressure competitive environments.
-            </p>
-            <div style="margin-top: 60px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
-                <div>
-                    <h4 style="color: var(--accent);">SPECIALIZATION</h4>
-                    <p>Advanced Bolt-Action Mechanics<br>SMG Entry Slaying<br>Tactical Map Control</p>
-                </div>
-                <div>
-                    <h4 style="color: var(--accent);">STATUS</h4>
-                    <p>Active // Master III<br>Peak // Legendary Veteran<br>Age: 13</p>
-                </div>
+
+        <footer>
+            SYSTEM_ENCRYPTED // ALL_LOGS_SAVED // 2024
+        </footer>
+    </div>
+
+    <!-- OVERLAYS (INFO, GAMES, LOADOUT) -->
+    <div id="info" class="view-overlay">
+        <button class="close-view" onclick="closeSection('info')">CLOSE</button>
+        <div style="max-width: 800px; margin: 40px auto;">
+            <h2 class="animate-text" style="font-size: 4rem; border-bottom: 1px solid #222; padding-bottom: 20px; margin-bottom: 40px;">PERSONNEL_FILE</h2>
+            <div style="font-family: 'JetBrains Mono', monospace; color: #888; line-height: 2;">
+                <p class="animate-text" style="animation-delay: 0.2s;">> NAME: JONASH R. GUEVARRA</p>
+                <p class="animate-text" style="animation-delay: 0.4s;">> AGE: 13</p>
+                <p class="animate-text" style="animation-delay: 0.6s;">> SPEC: AGGRESSIVE RECON / BOLT-ACTION PRECISION</p>
+                <p style="margin-top: 40px; color: #fff; opacity: 0; transform: translateY(20px); transition: 1s 0.8s forwards;" class="fade-up-text">
+                    A digital native operating in the high-tier competitive landscape of CODM. Known for "Bochazard" alias, Jonash combines mechanical skill with tactical aggression. Primarily active in Search & Destroy, dominating mid-to-long range lanes.
+                </p>
             </div>
         </div>
     </div>
 
-    <!-- GAMING OVERLAY -->
-    <div id="gaming" class="overlay">
-        <div class="overlay-header">
-            <div class="subtitle">NETWORK // CONNECTED</div>
-            <button class="close-btn" onclick="closeOverlay('gaming')">Close</button>
-        </div>
-        <div class="terminal">
-            <div class="terminal-header">> ACCESSING PLAYER DATABASE... DONE.</div>
-            <div class="ign-large">bochazard</div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                <div class="weapon-box master-tag" style="opacity: 1; animation: scanIn 0.5s forwards;">
-                    <div class="weapon-type">Current Rank</div>
-                    <div class="weapon-name" style="color: var(--master);">MASTER III</div>
-                    <p style="font-size: 0.7rem;">PROGRESSING TO LEGENDARY</p>
-                </div>
-                <div class="weapon-box legendary-tag" style="opacity: 1; animation: scanIn 0.7s forwards;">
-                    <div class="weapon-type">Peak History</div>
-                    <div class="weapon-name" style="color: var(--legendary);">LEGENDARY</div>
-                    <p style="font-size: 0.7rem;">MULTI-SEASON VETERAN</p>
-                </div>
-                <div class="weapon-box" style="opacity: 1; animation: scanIn 0.9s forwards;">
-                    <div class="weapon-type">Combat Style</div>
-                    <div class="weapon-name">AGGRO SNIPER</div>
-                    <p style="font-size: 0.7rem;">QUICKSCOPE SPECIALIST</p>
+    <div id="games" class="view-overlay">
+        <button class="close-view" onclick="closeSection('games')">CLOSE</button>
+        <div style="max-width: 1000px; margin: 40px auto;">
+            <h2 class="animate-text" style="font-size: 4rem; margin-bottom: 40px;">COMBAT_NETWORK</h2>
+            <div style="margin-bottom: 60px;">
+                <h3 style="font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 0.8rem; margin-bottom: 20px;">// PRIMARY_ROTATION</h3>
+                <div class="loadout-list">
+                    <div class="weapon-entry reveal" style="border-left: 4px solid var(--accent);">
+                        <div class="weapon-name" style="font-size: 1.2rem;">LW3-TUNDRA</div>
+                        <p style="font-size: 0.7rem; color: #555;">MAIN_AGGRESSION</p>
+                    </div>
+                    <div class="weapon-entry reveal" style="border-left: 4px solid var(--accent); transition-delay: 0.1s;">
+                        <div class="weapon-name" style="font-size: 1.2rem;">DL Q33</div>
+                        <p style="font-size: 0.7rem; color: #555;">CONSISTENCY_UNIT</p>
+                    </div>
+                    <div class="weapon-entry reveal" style="border-left: 4px solid var(--accent); transition-delay: 0.2s;">
+                        <div class="weapon-name" style="font-size: 1.2rem;">LOCUS</div>
+                        <p style="font-size: 0.7rem; color: #555;">MOBILITY_STRIKE</p>
+                    </div>
                 </div>
             </div>
-            <p style="margin-top: 40px; color: var(--text-dim); font-size: 0.8rem;">
-                > bio: High-tier sniper with focus on mobility and response time. Dominates Search & Destroy lobbies with specialized marksman builds. Current active duty: Master III bracket. Age: 13.
-            </p>
-        </div>
-    </div>
-
-    <!-- ARSENAL OVERLAY -->
-    <div id="arsenal" class="overlay">
-        <div class="overlay-header">
-            <div class="subtitle">ARMORY // LOADED (10 SYSTEMS)</div>
-            <button class="close-btn" onclick="closeOverlay('arsenal')">Close</button>
-        </div>
-        <div class="loadout-grid">
-            <!-- 01: KILO -->
-            <div class="weapon-box mythic-tag" style="animation-delay: 0.1s;">
-                <div class="weapon-type">01 // AR // Mythic</div>
-                <div class="weapon-name" style="color: var(--mythic);">Kilo 141 - Demonsong</div>
-                <div class="attachments">
-                    <span class="att">OWC Marksman</span><span class="att">No Stock</span><span class="att">OWC Laser</span>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px;">
+                <div class="weapon-entry reveal" style="transition-delay: 0.3s;">
+                    <h3 style="font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 0.8rem;">// HUD_LAYOUT_CODE</h3>
+                    <p style="font-size: 0.7rem; color: #555; margin-bottom: 10px;">Optimized for 4-finger claw</p>
+                    <div class="code-module">7212-3209-9812-4402-109</div>
+                </div>
+                <div class="weapon-entry reveal" style="transition-delay: 0.4s;">
+                    <h3 style="font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 0.8rem;">// SENSITIVITY_CODE</h3>
+                    <p style="font-size: 0.7rem; color: #555; margin-bottom: 10px;">Speed Acceleration: 120</p>
+                    <div class="code-module">6971-8822-1054-3398-721</div>
                 </div>
             </div>
-
-            <!-- 02: SWITCHBLADE -->
-            <div class="weapon-box mythic-tag" style="animation-delay: 0.2s;">
-                <div class="weapon-type">02 // SMG // Mythic</div>
-                <div class="weapon-name" style="color: #ff00ff;">Switchblade X9 - Neon</div>
-                <div class="attachments">
-                    <span class="att">Monolithic Supp.</span><span class="att">MIP Ext. Light</span><span class="att">OWC Laser</span>
+            <div class="loadout-list" style="margin-top: 60px;">
+                <div class="weapon-entry reveal" style="border-left: 4px solid var(--master);">
+                    <div class="weapon-label" style="font-size: 0.6rem; color: var(--text-dim);">RANK_STATUS</div>
+                    <div class="weapon-name" style="font-size: 1.5rem; color: var(--master); margin: 10px 0;">MASTER III</div>
+                    <div class="stat-bar-container"><div class="stat-fill" data-width="85%"></div></div>
                 </div>
-            </div>
-
-            <!-- 03: SKS -->
-            <div class="weapon-box diamond-tag" style="animation-delay: 0.3s;">
-                <div class="weapon-type">03 // Marksman // Diamond</div>
-                <div class="weapon-name" style="color: var(--diamond);">SKS - Diamond</div>
-                <div class="attachments">
-                    <span class="att">MIP Light Barrel</span><span class="att">No Stock</span><span class="att">10 Round Mag</span>
-                </div>
-            </div>
-
-            <!-- 04: DLQ -->
-            <div class="weapon-box epic-tag" style="animation-delay: 0.4s;">
-                <div class="weapon-type">04 // Sniper // Epic</div>
-                <div class="weapon-name" style="color: var(--epic);">DL Q33 - Bass Booster</div>
-                <div class="attachments">
-                    <span class="att">OWC Light Supp.</span><span class="att">Combat Stock</span><span class="att">FMJ</span>
-                </div>
-            </div>
-
-            <!-- 05: CX9 -->
-            <div class="weapon-box legendary-tag" style="animation-delay: 0.5s;">
-                <div class="weapon-type">05 // SMG // Legendary</div>
-                <div class="weapon-name" style="color: var(--legendary);">CX9 - Hollow Point</div>
-                <div class="attachments">
-                    <span class="att">CX9-S Suppressor</span><span class="att">CX3 Stock</span><span class="att">50 Round Drum</span>
-                </div>
-            </div>
-
-            <!-- 06: Holger 26 -->
-            <div class="weapon-box epic-tag" style="animation-delay: 0.6s;">
-                <div class="weapon-type">06 // LMG // Hybrid</div>
-                <div class="weapon-name" style="color: #cc00ff;">Holger 26 - Arisen</div>
-                <div class="attachments">
-                    <span class="att">MIP Light Barrel</span><span class="att">No Stock</span><span class="att">Double Stack</span>
-                </div>
-            </div>
-
-            <!-- 07: Grau 5.56 -->
-            <div class="weapon-box meta-tag" style="animation-delay: 0.7s;">
-                <div class="weapon-type">07 // AR // Meta</div>
-                <div class="weapon-name" style="color: var(--meta);">Grau 5.56 - Core</div>
-                <div class="attachments">
-                    <span class="att">Tempus Archangel</span><span class="att">No Stock</span><span class="att">50 Round Mag</span>
-                </div>
-            </div>
-
-            <!-- 08: QQ9 -->
-            <div class="weapon-box diamond-tag" style="animation-delay: 0.8s;">
-                <div class="weapon-type">08 // SMG // Diamond</div>
-                <div class="weapon-name" style="color: var(--diamond);">QQ9 - Sigrun</div>
-                <div class="attachments">
-                    <span class="att">Monolithic Supp.</span><span class="att">No Stock</span><span class="att">45 Round Mag</span>
-                </div>
-            </div>
-
-            <!-- 09: ZRG 20mm -->
-            <div class="weapon-box rare-tag" style="animation-delay: 0.9s;">
-                <div class="weapon-type">09 // Sniper // Heavy</div>
-                <div class="weapon-name" style="color: var(--rare);">ZRG 20mm - Anti-Mat</div>
-                <div class="attachments">
-                    <span class="att">OWC Light Supp.</span><span class="att">Anti-Vehicle Mag</span><span class="att">Stippled Grip</span>
-                </div>
-            </div>
-
-            <!-- 10: L-CAR -->
-            <div class="weapon-box meta-tag" style="animation-delay: 1.0s;">
-                <div class="weapon-type">10 // Pistol // Secondary</div>
-                <div class="weapon-name" style="color: var(--meta);">L-CAR 9 - Crystal</div>
-                <div class="attachments">
-                    <span class="att">Agency Supp.</span><span class="att">Agile Stock</span><span class="att">Aim Assist Laser</span>
+                <div class="weapon-entry reveal" style="border-left: 4px solid var(--legendary); transition-delay: 0.2s;">
+                    <div class="weapon-label" style="font-size: 0.6rem; color: var(--text-dim);">PEAK_HISTORY</div>
+                    <div class="weapon-name" style="font-size: 1.5rem; color: var(--legendary); margin: 10px 0;">LEGENDARY</div>
+                    <div class="stat-bar-container"><div class="stat-fill" data-width="100%"></div></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <footer>
-        COPYRIGHT © 2024 J.R.G. SYSTEMS // ALL RIGHTS RESERVED
-    </footer>
+    <div id="loadout" class="view-overlay">
+        <button class="close-view" onclick="closeSection('loadout')">CLOSE</button>
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <h2 class="animate-text" style="font-size: 4rem; margin-bottom: 20px;">SYSTEM_VAULT</h2>
+            <div class="loadout-list" id="arsenal-grid"></div>
+        </div>
+    </div>
 
     <script>
-        function openOverlay(id) {
-            const overlay = document.getElementById(id);
-            overlay.style.display = 'block';
-            document.body.style.overflow = 'hidden';
-            
-            const boxes = overlay.querySelectorAll('.weapon-box');
-            boxes.forEach(box => {
-                box.style.animation = 'none';
-                box.offsetHeight;
-                const delay = box.style.animationDelay;
-                box.style.animation = `scanIn 0.6s ${delay} forwards`;
-            });
-        }
-        function closeOverlay(id) {
-            document.getElementById(id).style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-    </script>
-</body>
-</html>
+        const weaponData = [
+            { name: "LW3-Tundra - Night", rank: "META", color: "#5ffb7e", atts: ["Combat Stock", "Tiger Team", "Fast Mag"] },
+            { name: "Kilo 141 - Demonsong", rank: "MYTHIC", color: "#ff0055", atts: ["OWC Marksman", "No Stock", "OWC Laser"] },
+            { name: "Switchblade X9 - Neon", rank: "MYTHIC", color: "#ff00ff", atts: ["Mono Supp", "MIP Ligh
 
