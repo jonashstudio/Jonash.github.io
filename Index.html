@@ -32,9 +32,8 @@
             background: var(--bg);
             color: var(--text-bright);
             font-family: 'Space Grotesk', sans-serif;
-            overflow: hidden; /* Managed by JS */
-            background-image: 
-                radial-gradient(circle at 50% 50%, #080808 0%, #030303 100%);
+            overflow: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #080808 0%, #030303 100%);
         }
 
         /* --- Global Animations --- */
@@ -46,27 +45,18 @@
             100% { clip-path: inset(0 0 0 0); transform: translate(0); }
         }
 
-        @keyframes textReveal {
-            from { width: 0; }
-            to { width: 100%; }
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        @keyframes terminalScroll {
-            from { transform: translateY(0); }
-            to { transform: translateY(-50%); }
+        @keyframes pulse-radar {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.5; }
         }
 
-        /* --- UI Scan Overlay --- */
-        .scan-layer {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, transparent 50%, rgba(0, 242, 255, 0.01) 50%);
-            background-size: 100% 4px;
-            z-index: 1000;
-            pointer-events: none;
-        }
-
-        /* --- Boot Sequence Fixes --- */
+        /* --- LOADING SCREEN --- */
         #boot-screen {
             position: fixed;
             inset: 0;
@@ -76,67 +66,63 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            transition: all 0.8s cubic-bezier(0.7, 0, 0.3, 1);
-            visibility: visible;
-            opacity: 1;
+            transition: opacity 1s cubic-bezier(0.7, 0, 0.3, 1), visibility 1s;
         }
 
-        .boot-terminal {
-            width: 300px;
-            height: 120px;
-            overflow: hidden;
+        .loader-center {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loader-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid transparent;
+            border-top: 2px solid var(--accent);
+            border-radius: 50%;
+            animation: rotate 1.5s linear infinite;
+        }
+
+        .loader-hex {
+            width: 50px;
+            height: 50px;
+            background: var(--accent);
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+            animation: pulse-radar 1.5s ease-in-out infinite;
+            box-shadow: 0 0 30px var(--accent);
+        }
+
+        .loader-text-wrap {
+            margin-top: 40px;
+            text-align: center;
             font-family: 'JetBrains Mono', monospace;
+        }
+
+        .loader-percentage {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .loader-status {
             font-size: 0.6rem;
             color: var(--accent);
-            opacity: 0.7;
-            margin-bottom: 20px;
-            mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
-            position: relative;
-        }
-
-        .terminal-content {
-            animation: terminalScroll 4s linear infinite;
-        }
-
-        .boot-logo {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
-            font-size: 1.5rem;
-            letter-spacing: 8px;
-            color: #fff;
-            margin-bottom: 10px;
-        }
-
-        .boot-bar-wrap {
-            width: 200px;
-            height: 2px;
-            background: #111;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .boot-bar-fill {
-            position: absolute;
-            left: 0; top: 0; height: 100%;
-            width: 0%;
-            background: var(--accent);
-            box-shadow: 0 0 10px var(--accent);
-        }
-
-        #boot-screen.shutdown {
-            transform: scale(1.2);
-            filter: brightness(2) blur(20px);
-            opacity: 0;
-            pointer-events: none;
-            visibility: hidden;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 5px;
         }
 
         /* --- Main Interface --- */
         #main-ui {
             opacity: 0;
-            transform: scale(1.05);
+            transform: scale(0.95);
             filter: blur(10px);
-            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
             visibility: hidden;
         }
 
@@ -147,268 +133,59 @@
             visibility: visible;
         }
 
-        header {
-            padding: 120px 20px 80px;
-            text-align: center;
-        }
+        header { padding: 120px 20px 80px; text-align: center; }
+        h1 { font-size: clamp(3rem, 12vw, 7rem); font-weight: 700; letter-spacing: -5px; text-transform: uppercase; position: relative; display: inline-block; }
+        .h1-glitch::after { content: 'J.R. GUEVARRA'; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: var(--bg); animation: glitchSplit 3s infinite alternate; opacity: 0.5; color: var(--accent); z-index: -1; }
+        
+        .grid-container { max-width: 1200px; margin: 0 auto; padding: 0 40px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .tactical-card { background: #0a0a0a; border: 1px solid #1a1a1a; padding: 50px 35px; position: relative; overflow: hidden; transition: all 0.4s ease; opacity: 0; transform: translateY(20px); cursor: pointer; }
+        #main-ui.active .tactical-card { opacity: 1; transform: translateY(0); }
+        .tactical-card:hover { border-color: var(--accent); background: #0f0f0f; transform: translateY(-5px); }
+        
+        .card-header { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--accent); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .card-header::after { content: ''; height: 1px; flex-grow: 1; background: linear-gradient(90deg, var(--accent), transparent); }
 
-        h1 {
-            font-size: clamp(3rem, 15vw, 8rem);
-            font-weight: 700;
-            letter-spacing: -5px;
-            text-transform: uppercase;
-            position: relative;
-            display: inline-block;
-        }
+        .btn-view { margin-top: 25px; padding: 10px 20px; border: 1px solid #333; display: inline-block; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 2px; }
+        .tactical-card:hover .btn-view { background: var(--accent); color: #000; box-shadow: 0 0 15px var(--accent-glow); }
 
-        .h1-glitch::after {
-            content: 'J.R. GUEVARRA';
-            position: absolute;
-            left: 0; top: 0;
-            width: 100%; height: 100%;
-            background: var(--bg);
-            animation: glitchSplit 3s infinite alternate;
-            opacity: 0.5;
-            color: var(--accent);
-            z-index: -1;
-        }
+        /* --- Overlays --- */
+        .view-overlay { position: fixed; inset: 0; background: rgba(3,3,3,0.98); z-index: 2000; display: none; padding: 40px; overflow-y: auto; backdrop-filter: blur(20px); }
+        .close-view { position: fixed; top: 40px; right: 40px; background: var(--accent); border: none; color: #000; padding: 10px 20px; font-family: 'JetBrains Mono', monospace; font-weight: 700; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); cursor: pointer; }
+        
+        .loadout-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; max-width: 1000px; margin: 30px auto; }
+        .weapon-entry { background: #080808; border: 1px solid #111; padding: 20px; opacity: 0; transform: translateX(-20px); transition: 0.4s; }
+        .weapon-entry.reveal { opacity: 1; transform: translateX(0); }
+        .weapon-rank { width: 4px; height: 25px; margin-right: 12px; }
+        .entry-flex { display: flex; align-items: center; }
 
-        .grid-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 40px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-        }
+        .code-module { background: #050505; border: 1px dashed #333; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; margin-top: 8px; color: var(--accent); letter-spacing: 1px; }
 
-        .tactical-card {
-            background: #0a0a0a;
-            border: 1px solid #1a1a1a;
-            padding: 60px 40px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
-            opacity: 0;
-            transform: translateY(30px);
-        }
+        footer { padding: 60px 20px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 0.55rem; color: #333; letter-spacing: 4px; }
 
-        #main-ui.active .tactical-card {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .tactical-card:nth-child(1) { transition-delay: 0.1s; }
-        .tactical-card:nth-child(2) { transition-delay: 0.2s; }
-        .tactical-card:nth-child(3) { transition-delay: 0.3s; }
-
-        .tactical-card:hover {
-            border-color: var(--accent);
-            background: #0f0f0f;
-            transform: translateY(-10px) scale(1.02);
-        }
-
-        .card-header {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            color: var(--accent);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .card-header::after {
-            content: '';
-            height: 1px; flex-grow: 1;
-            background: linear-gradient(90deg, var(--accent), transparent);
-        }
-
-        .tactical-card h2 {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-            font-weight: 300;
-            letter-spacing: 2px;
-        }
-
-        .btn-view {
-            margin-top: 30px;
-            padding: 12px 25px;
-            border: 1px solid #333;
-            display: inline-block;
-            text-transform: uppercase;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            letter-spacing: 2px;
-            position: relative;
-            transition: 0.3s;
-        }
-
-        .tactical-card:hover .btn-view {
-            background: var(--accent);
-            color: #000;
-            border-color: var(--accent);
-            box-shadow: 0 0 20px var(--accent-glow);
-        }
-
-        .view-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(3,3,3,0.98);
-            z-index: 2000;
-            display: none;
-            padding: 60px;
-            overflow-y: auto;
-            backdrop-filter: blur(15px);
-        }
-
-        .close-view {
-            position: fixed;
-            top: 40px; right: 40px;
-            background: var(--accent);
-            border: none;
-            color: #000;
-            padding: 10px 20px;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
-            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
-            cursor: pointer;
-            z-index: 2001;
-        }
-
-        .loadout-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 20px;
-            max-width: 1200px;
-            margin: 40px auto;
-        }
-
-        .weapon-entry {
-            background: #080808;
-            border: 1px solid #111;
-            padding: 25px;
-            opacity: 0;
-            transform: translateX(-30px);
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .weapon-entry.reveal {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .weapon-rank {
-            width: 4px; height: 30px;
-            margin-right: 15px;
-        }
-
-        .entry-flex { display: flex; align-items: center; margin-bottom: 15px; }
-
-        .attachment-tag {
-            font-size: 0.6rem;
-            background: #151515;
-            padding: 4px 8px;
-            margin: 2px;
-            display: inline-block;
-            border: 1px solid #222;
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--text-dim);
-            opacity: 0;
-            transform: scale(0.8);
-            transition: all 0.4s ease;
-        }
-
-        .weapon-entry.reveal .attachment-tag {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .stat-bar-container {
-            width: 100%; height: 2px;
-            background: #111;
-            margin: 10px 0;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-fill {
-            height: 100%;
-            background: var(--accent);
-            width: 0;
-            transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .animate-text {
-            overflow: hidden;
-            white-space: nowrap;
-            width: 0;
-        }
-
-        .view-overlay.active .animate-text {
-            animation: textReveal 1s steps(40, end) forwards;
-        }
-
-        .code-module {
-            background: #050505;
-            border: 1px dashed #333;
-            padding: 15px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            margin-top: 10px;
-            color: var(--accent);
-            position: relative;
-        }
-
-        footer {
-            padding: 80px 20px;
-            text-align: center;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.6rem;
-            color: #222;
-            letter-spacing: 5px;
-        }
-
-        @media (max-width: 900px) {
-            .grid-container { grid-template-columns: 1fr; }
-            .view-overlay { padding: 20px; }
-        }
+        @media (max-width: 900px) { .grid-container { grid-template-columns: 1fr; } .view-overlay { padding: 20px; } }
     </style>
 </head>
 <body>
 
     <div class="scan-layer"></div>
 
-    <!-- BOOT SEQUENCE -->
+    <!-- LOADING SCREEN -->
     <div id="boot-screen">
-        <div class="boot-terminal">
-            <div class="terminal-content">
-                [SYSTEM] INITIALIZING KERNEL...<br>
-                [USER] BOCHAZARD AUTHENTICATED<br>
-                [FILE] LOADING INFO.DAT...<br>
-                [FILE] LOADING GAMES.DAT...<br>
-                [FILE] LOADING LOADOUT.DAT...<br>
-                [OS] TACTICAL_SHELL ACTIVE<br>
-                [NET] SYNCING SENSITIVITY...<br>
-                [NET] SYNCING HUD_ARCH...<br>
-                [HW] NEURAL_LINK STABLE<br>
-                [OK] HANDSHAKE COMPLETE<br>
-                [OK] READY_TO_DEPLOY...<br>
-                [SYSTEM] INITIALIZING KERNEL...<br>
-                [USER] BOCHAZARD AUTHENTICATED<br>
-            </div>
+        <div class="loader-center">
+            <div class="loader-ring"></div>
+            <div class="loader-hex"></div>
         </div>
-        <div class="boot-logo">JRG_OS</div>
-        <div class="boot-bar-wrap">
-            <div class="boot-bar-fill" id="boot-progress"></div>
+        <div class="loader-text-wrap">
+            <div class="loader-percentage" id="load-pc">0%</div>
+            <div class="loader-status" id="load-status">CONNECTING...</div>
         </div>
     </div>
 
     <div id="main-ui">
         <header>
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--accent); margin-bottom: 10px;">[ U.ID: BOCHAZARD ]</div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--accent); margin-bottom: 10px;">[ AUTH_IDENT: BOCHAZARD ]</div>
             <h1 class="h1-glitch">J.R. GUEVARRA</h1>
-            <div style="margin-top: 20px; display: flex; justify-content: center; gap: 40px; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--text-dim);">
+            <div style="margin-top: 20px; display: flex; justify-content: center; gap: 30px; font-family: 'JetBrains Mono', monospace; font-size: 0.55rem; color: var(--text-dim);">
                 <span>STATUS: MASTER_III</span>
                 <span>PEAK: LEGENDARY</span>
                 <span>ROLE: SNIPER_MAIN</span>
@@ -419,130 +196,168 @@
             <div class="tactical-card" onclick="openSection('info')">
                 <div class="card-header">FILE_01</div>
                 <h2>INFO</h2>
-                <p style="color: var(--text-dim); font-size: 0.9rem; line-height: 1.6;">Personnel bio-data and identification. 13-year-old high-tier operator profile.</p>
+                <p style="color: var(--text-dim); font-size: 0.85rem; line-height: 1.5;">Operator dossier, age verification, and personal specialization specs.</p>
                 <div class="btn-view">Access File</div>
             </div>
-
             <div class="tactical-card" onclick="openSection('games')">
                 <div class="card-header">DATA_02</div>
                 <h2>GAMES</h2>
-                <p style="color: var(--text-dim); font-size: 0.9rem; line-height: 1.6;">Combat settings, HUD architecture, and sensitivity configuration.</p>
+                <p style="color: var(--text-dim); font-size: 0.85rem; line-height: 1.5;">Network codes for HUD layout, sensitivity, and primary rotation.</p>
                 <div class="btn-view">View Specs</div>
             </div>
-
             <div class="tactical-card" onclick="openSection('loadout')">
                 <div class="card-header">VAULT_03</div>
                 <h2>LOADOUT</h2>
-                <p style="color: var(--text-dim); font-size: 0.9rem; line-height: 1.6;">Review specialized loadouts including Mythic and Legendary configurations.</p>
+                <p style="color: var(--text-dim); font-size: 0.85rem; line-height: 1.5;">Vault access to Mythic, Legendary, and Diamond weapon archives.</p>
                 <div class="btn-view">Open Vault</div>
             </div>
         </div>
 
-        <footer>
-            SYSTEM_ENCRYPTED // 2024 // RECON_OS_V2
-        </footer>
+        <footer>RECON_OS_V2.5 // JONASH R. GUEVARRA // 2024</footer>
     </div>
 
+    <!-- INFO OVERLAY -->
     <div id="info" class="view-overlay">
         <button class="close-view" onclick="closeSection('info')">CLOSE</button>
         <div style="max-width: 800px; margin: 40px auto;">
-            <h2 class="animate-text" style="font-size: 4rem; border-bottom: 1px solid #222; padding-bottom: 20px; margin-bottom: 40px;">PERSONNEL_FILE</h2>
+            <h2 style="font-size: 2.5rem; border-bottom: 1px solid #222; padding-bottom: 15px; margin-bottom: 30px;">PERSONNEL_FILE</h2>
             <div style="font-family: 'JetBrains Mono', monospace; color: #888; line-height: 2;">
-                <p class="animate-text" style="animation-delay: 0.2s;">> NAME: JONASH R. GUEVARRA</p>
-                <p class="animate-text" style="animation-delay: 0.4s;">> AGE: 13</p>
-                <p class="animate-text" style="animation-delay: 0.6s;">> SPEC: AGGRESSIVE RECON / BOLT-ACTION PRECISION</p>
-                <p style="margin-top: 40px; color: #fff; opacity: 0; transform: translateY(20px); transition: 1s 0.8s forwards;" class="fade-up-text">
-                    A digital native operating in the high-tier competitive landscape of CODM. Known for "Bochazard" alias, Jonash combines mechanical skill with tactical aggression. Primarily active in Search & Destroy, dominating mid-to-long range lanes.
+                <p style="color: var(--accent);">> IDENTIFIER: JONASH R. GUEVARRA</p>
+                <p>> CURRENT_AGE: 19</p>
+                <p>> SPECIALIZATION: AGGRESSIVE SNIPER / S&D SPECIALIST</p>
+                <p style="margin-top: 30px; color: #fff; font-family: 'Space Grotesk';">
+                    An advanced competitive operator with years of mechanical refinement in CODM. 
+                    Known for aggressive rotation strategy and consistent high-pressure performance. 
+                    Now operating at 19 years old, focusing on bolt-action precision and strategic utility.
                 </p>
             </div>
         </div>
     </div>
 
+    <!-- GAMES OVERLAY -->
     <div id="games" class="view-overlay">
         <button class="close-view" onclick="closeSection('games')">CLOSE</button>
         <div style="max-width: 1000px; margin: 40px auto;">
-            <h2 class="animate-text" style="font-size: 4rem; margin-bottom: 40px;">COMBAT_NETWORK</h2>
-            <div style="margin-bottom: 40px;">
-                <h3 style="font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 0.8rem; margin-bottom: 20px;">// PRIMARY_ROTATION</h3>
-                <div class="loadout-list">
-                    <div class="weapon-entry reveal" style="border-left: 4px solid var(--accent);">
-                        <div class="weapon-name">LW3-TUNDRA</div>
-                        <p style="font-size: 0.7rem; color: #555;">MAIN_AGGRESSION</p>
-                    </div>
-                    <div class="weapon-entry reveal" style="border-left: 4px solid var(--accent); transition-delay: 0.1s;">
-                        <div class="weapon-name">DL Q33</div>
-                        <p style="font-size: 0.7rem; color: #555;">CONSISTENCY_UNIT</p>
-                    </div>
-                    <div class="weapon-entry reveal" style="border-left: 4px solid var(--accent); transition-delay: 0.2s;">
-                        <div class="weapon-name">LOCUS</div>
-                        <p style="font-size: 0.7rem; color: #555;">MOBILITY_STRIKE</p>
-                    </div>
+            <h2 style="font-size: 2.5rem; margin-bottom: 30px;">COMBAT_NET</h2>
+            
+            <h3 style="font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 0.7rem; margin-bottom: 15px;">// PRIMARY_ARMS</h3>
+            <div class="loadout-list">
+                <div class="weapon-entry reveal" style="border-left: 3px solid var(--accent);">
+                    <div style="font-size: 1.1rem; font-weight: 700;">LW3-TUNDRA</div>
+                    <div style="font-size: 0.6rem; color: #555;">MAIN_ASSET</div>
+                </div>
+                <div class="weapon-entry reveal" style="border-left: 3px solid var(--accent); transition-delay: 0.1s;">
+                    <div style="font-size: 1.1rem; font-weight: 700;">DL Q33</div>
+                    <div style="font-size: 0.6rem; color: #555;">PRECISION_UNIT</div>
+                </div>
+                <div class="weapon-entry reveal" style="border-left: 3px solid var(--accent); transition-delay: 0.2s;">
+                    <div style="font-size: 1.1rem; font-weight: 700;">LOCUS</div>
+                    <div style="font-size: 0.6rem; color: #555;">MOBILITY_STRIKE</div>
                 </div>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px;">
                 <div class="weapon-entry reveal" style="transition-delay: 0.3s;">
-                    <h3 style="font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 0.8rem;">// HUD_LAYOUT_CODE</h3>
+                    <h3 style="font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 0.6rem;">// HUD_CODE</h3>
                     <div class="code-module">7212-3209-9812-4402-109</div>
                 </div>
                 <div class="weapon-entry reveal" style="transition-delay: 0.4s;">
-                    <h3 style="font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 0.8rem;">// SENSITIVITY_CODE</h3>
+                    <h3 style="font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 0.6rem;">// SENS_CODE</h3>
                     <div class="code-module">6971-8822-1054-3398-721</div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- LOADOUT OVERLAY -->
     <div id="loadout" class="view-overlay">
         <button class="close-view" onclick="closeSection('loadout')">CLOSE</button>
         <div style="max-width: 1200px; margin: 0 auto;">
-            <h2 class="animate-text" style="font-size: 4rem; margin-bottom: 20px;">SYSTEM_VAULT</h2>
+            <h2 style="font-size: 2.5rem; margin-bottom: 20px;">SYSTEM_VAULT</h2>
             <div class="loadout-list" id="arsenal-grid"></div>
         </div>
     </div>
 
     <script>
         const weaponData = [
-            { name: "LW3-Tundra - Night", rank: "META", color: "#5ffb7e", atts: ["Combat Stock", "Tiger Team", "Fast Mag"] },
-            { name: "Kilo 141 - Demonsong", rank: "MYTHIC", color: "#ff0055", atts: ["OWC Marksman", "No Stock", "OWC Laser"] },
-            { name: "Switchblade X9 - Neon", rank: "MYTHIC", color: "#ff00ff", atts: ["Mono Supp", "MIP Light", "OWC Laser"] },
-            { name: "SKS - Diamond", rank: "DIAMOND", color: "#b9f2ff", atts: ["MIP Light", "No Stock", "10 Rnd Mag"] },
-            { name: "DL Q33 - Bass Booster", rank: "EPIC", color: "#a335ee", atts: ["OWC Light Supp", "Combat Stock", "FMJ"] },
-            { name: "CX9 - Hollow Point", rank: "LEGENDARY", color: "#ffaa00", atts: ["CX9-S Supp", "CX3 Stock", "50 Rnd Drum"] },
-            { name: "Grau 5.56 - Core", rank: "META", color: "#5ffb7e", atts: ["Tempus Archangel", "No Stock", "50 Rnd Mag"] },
-            { name: "Locus - Electron", rank: "LEGENDARY", color: "#ffaa00", atts: ["Light Supp", "Light Stock", "OWC Laser"] }
+            { name: "LW3-Tundra - Night", rank: "META", color: "#5ffb7e" },
+            { name: "DL Q33 - Bass Booster", rank: "EPIC", color: "#a335ee" },
+            { name: "Kilo 141 - Demonsong", rank: "MYTHIC", color: "#ff0055" },
+            { name: "Switchblade X9 - Neon", rank: "MYTHIC", color: "#ff00ff" },
+            { name: "Locus - Electron", rank: "LEGENDARY", color: "#ffaa00" },
+            { name: "SKS - Diamond", rank: "DIAMOND", color: "#b9f2ff" },
+            { name: "Grau 5.56 - Core", rank: "META", color: "#5ffb7e" },
+            { name: "CX9 - Hollow Point", rank: "LEGENDARY", color: "#ffaa00" }
         ];
 
-        // Ensure everything runs only after DOM is ready
+        const statusLogs = ["SYNCING...", "VERIFYING...", "LOADING VAULT...", "READY."];
+
         document.addEventListener('DOMContentLoaded', () => {
             const bootScreen = document.getElementById('boot-screen');
-            const progress = document.getElementById('boot-progress');
+            const pcText = document.getElementById('load-pc');
+            const statusText = document.getElementById('load-status');
             const mainUi = document.getElementById('main-ui');
-            let width = 0;
+            let progress = 0;
 
-            // Failsafe: Force show UI after 5 seconds if boot hangs
-            const forceShow = setTimeout(() => finishBoot(), 5000);
-
-            function finishBoot() {
-                clearInterval(bootInterval);
-                clearTimeout(forceShow);
-                bootScreen.classList.add('shutdown');
+            const exitBoot = () => {
+                bootScreen.style.opacity = '0';
                 setTimeout(() => {
-                    bootScreen.style.display = 'none';
+                    bootScreen.style.visibility = 'hidden';
                     mainUi.classList.add('active');
                     document.body.style.overflow = 'auto';
-                }, 800);
-            }
+                }, 1000);
+            };
 
-            const bootInterval = setInterval(() => {
-                if (width >= 100) {
-                    finishBoot();
+            const loadTimer = setInterval(() => {
+                if (progress >= 100) {
+                    clearInterval(loadTimer);
+                    statusText.innerText = "DEPLOYED";
+                    setTimeout(exitBoot, 400);
                 } else {
-                    width += Math.random() * 20;
-                    if (width > 100) width = 100;
-                    progress.style.width = width + '%';
+                    progress += Math.floor(Math.random() * 20) + 1;
+                    if (progress > 100) progress = 100;
+                    pcText.innerText = progress + "%";
+                    statusText.innerText = statusLogs[Math.floor((progress/101) * statusLogs.length)];
                 }
-            }, 150);
+            }, 180);
 
-            // Populate Loadout
             const grid = document.getElementById('arsenal-grid');
+            weaponData.forEach((w) => {
+                const item = document.createElement('div');
+                item.className = 'weapon-entry';
+                item.innerHTML = `
+                    <div class="entry-flex">
+                        <div class="weapon-rank" style="background: ${w.color}"></div>
+                        <div>
+                            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.5rem; color: #555;">${w.rank}</div>
+                            <div style="font-weight: 700; color: ${w.color}">${w.name}</div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(item);
+            });
+        });
+
+        function openSection(id) {
+            const el = document.getElementById(id);
+            el.style.display = 'block';
+            setTimeout(() => el.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+            el.querySelectorAll('.weapon-entry').forEach((e, i) => {
+                e.classList.remove('reveal');
+                setTimeout(() => e.classList.add('reveal'), i * 60);
+            });
+        }
+
+        function closeSection(id) {
+            const el = document.getElementById(id);
+            el.classList.remove('active');
+            setTimeout(() => { el.style.display = 'none'; }, 500);
+            document.body.style.overflow = 'auto';
+        }
+    </script>
+</body>
+</html>
+
+
        
