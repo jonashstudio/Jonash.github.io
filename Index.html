@@ -32,23 +32,12 @@
             background: var(--bg);
             color: var(--text-bright);
             font-family: 'Space Grotesk', sans-serif;
-            overflow: hidden; /* Locked during boot */
+            overflow: hidden; /* Managed by JS */
             background-image: 
                 radial-gradient(circle at 50% 50%, #080808 0%, #030303 100%);
         }
 
         /* --- Global Animations --- */
-        @keyframes slideInUp {
-            from { transform: translateY(50px); opacity: 0; filter: blur(10px); }
-            to { transform: translateY(0); opacity: 1; filter: blur(0); }
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(0, 242, 255, 0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(0, 242, 255, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 242, 255, 0); }
-        }
-
         @keyframes glitchSplit {
             0% { clip-path: inset(50% 0 30% 0); transform: translate(-5px); }
             10% { clip-path: inset(10% 0 85% 0); transform: translate(5px); }
@@ -64,7 +53,7 @@
 
         @keyframes terminalScroll {
             from { transform: translateY(0); }
-            to { transform: translateY(-100%); }
+            to { transform: translateY(-50%); }
         }
 
         /* --- UI Scan Overlay --- */
@@ -77,7 +66,7 @@
             pointer-events: none;
         }
 
-        /* --- NEW Boot Sequence --- */
+        /* --- Boot Sequence Fixes --- */
         #boot-screen {
             position: fixed;
             inset: 0;
@@ -88,11 +77,13 @@
             justify-content: center;
             align-items: center;
             transition: all 0.8s cubic-bezier(0.7, 0, 0.3, 1);
+            visibility: visible;
+            opacity: 1;
         }
 
         .boot-terminal {
             width: 300px;
-            height: 150px;
+            height: 120px;
             overflow: hidden;
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.6rem;
@@ -100,10 +91,11 @@
             opacity: 0.7;
             margin-bottom: 20px;
             mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+            position: relative;
         }
 
         .terminal-content {
-            animation: terminalScroll 3s linear infinite;
+            animation: terminalScroll 4s linear infinite;
         }
 
         .boot-logo {
@@ -112,8 +104,7 @@
             font-size: 1.5rem;
             letter-spacing: 8px;
             color: #fff;
-            position: relative;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
         }
 
         .boot-bar-wrap {
@@ -130,28 +121,30 @@
             width: 0%;
             background: var(--accent);
             box-shadow: 0 0 10px var(--accent);
-            transition: width 0.1s linear;
         }
 
         #boot-screen.shutdown {
-            transform: scale(1.5);
-            filter: brightness(5) blur(20px);
+            transform: scale(1.2);
+            filter: brightness(2) blur(20px);
             opacity: 0;
             pointer-events: none;
+            visibility: hidden;
         }
 
         /* --- Main Interface --- */
         #main-ui {
             opacity: 0;
-            transform: scale(1.1);
+            transform: scale(1.05);
             filter: blur(10px);
-            transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+            visibility: hidden;
         }
 
         #main-ui.active {
             opacity: 1;
             transform: scale(1);
             filter: blur(0);
+            visibility: visible;
         }
 
         header {
@@ -180,7 +173,6 @@
             z-index: -1;
         }
 
-        /* --- Interactive Cards --- */
         .grid-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -259,7 +251,6 @@
             box-shadow: 0 0 20px var(--accent-glow);
         }
 
-        /* --- Fullscreen Overlay Section --- */
         .view-overlay {
             position: fixed;
             inset: 0;
@@ -285,7 +276,6 @@
             z-index: 2001;
         }
 
-        /* --- Dynamic List --- */
         .loadout-list {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -370,16 +360,6 @@
             position: relative;
         }
 
-        .code-module::before {
-            content: 'COPY_ID';
-            position: absolute;
-            top: -10px; right: 10px;
-            background: var(--bg);
-            padding: 0 5px;
-            font-size: 0.5rem;
-            color: #555;
-        }
-
         footer {
             padding: 80px 20px;
             text-align: center;
@@ -402,18 +382,20 @@
     <!-- BOOT SEQUENCE -->
     <div id="boot-screen">
         <div class="boot-terminal">
-            <div class="terminal-content" id="term-logs">
+            <div class="terminal-content">
                 [SYSTEM] INITIALIZING KERNEL...<br>
                 [USER] BOCHAZARD AUTHENTICATED<br>
                 [FILE] LOADING INFO.DAT...<br>
                 [FILE] LOADING GAMES.DAT...<br>
                 [FILE] LOADING LOADOUT.DAT...<br>
                 [OS] TACTICAL_SHELL ACTIVE<br>
-                [NET] SYNCING SENSITIVITY_CODES...<br>
+                [NET] SYNCING SENSITIVITY...<br>
                 [NET] SYNCING HUD_ARCH...<br>
                 [HW] NEURAL_LINK STABLE<br>
                 [OK] HANDSHAKE COMPLETE<br>
-                [OK] READY_TO_DEPLOY...
+                [OK] READY_TO_DEPLOY...<br>
+                [SYSTEM] INITIALIZING KERNEL...<br>
+                [USER] BOCHAZARD AUTHENTICATED<br>
             </div>
         </div>
         <div class="boot-logo">JRG_OS</div>
@@ -457,11 +439,10 @@
         </div>
 
         <footer>
-            SYSTEM_ENCRYPTED // ALL_LOGS_SAVED // 2024
+            SYSTEM_ENCRYPTED // 2024 // RECON_OS_V2
         </footer>
     </div>
 
-    <!-- OVERLAYS (INFO, GAMES, LOADOUT) -->
     <div id="info" class="view-overlay">
         <button class="close-view" onclick="closeSection('info')">CLOSE</button>
         <div style="max-width: 800px; margin: 40px auto;">
@@ -481,45 +462,31 @@
         <button class="close-view" onclick="closeSection('games')">CLOSE</button>
         <div style="max-width: 1000px; margin: 40px auto;">
             <h2 class="animate-text" style="font-size: 4rem; margin-bottom: 40px;">COMBAT_NETWORK</h2>
-            <div style="margin-bottom: 60px;">
+            <div style="margin-bottom: 40px;">
                 <h3 style="font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 0.8rem; margin-bottom: 20px;">// PRIMARY_ROTATION</h3>
                 <div class="loadout-list">
                     <div class="weapon-entry reveal" style="border-left: 4px solid var(--accent);">
-                        <div class="weapon-name" style="font-size: 1.2rem;">LW3-TUNDRA</div>
+                        <div class="weapon-name">LW3-TUNDRA</div>
                         <p style="font-size: 0.7rem; color: #555;">MAIN_AGGRESSION</p>
                     </div>
                     <div class="weapon-entry reveal" style="border-left: 4px solid var(--accent); transition-delay: 0.1s;">
-                        <div class="weapon-name" style="font-size: 1.2rem;">DL Q33</div>
+                        <div class="weapon-name">DL Q33</div>
                         <p style="font-size: 0.7rem; color: #555;">CONSISTENCY_UNIT</p>
                     </div>
                     <div class="weapon-entry reveal" style="border-left: 4px solid var(--accent); transition-delay: 0.2s;">
-                        <div class="weapon-name" style="font-size: 1.2rem;">LOCUS</div>
+                        <div class="weapon-name">LOCUS</div>
                         <p style="font-size: 0.7rem; color: #555;">MOBILITY_STRIKE</p>
                     </div>
                 </div>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
                 <div class="weapon-entry reveal" style="transition-delay: 0.3s;">
                     <h3 style="font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 0.8rem;">// HUD_LAYOUT_CODE</h3>
-                    <p style="font-size: 0.7rem; color: #555; margin-bottom: 10px;">Optimized for 4-finger claw</p>
                     <div class="code-module">7212-3209-9812-4402-109</div>
                 </div>
                 <div class="weapon-entry reveal" style="transition-delay: 0.4s;">
                     <h3 style="font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 0.8rem;">// SENSITIVITY_CODE</h3>
-                    <p style="font-size: 0.7rem; color: #555; margin-bottom: 10px;">Speed Acceleration: 120</p>
                     <div class="code-module">6971-8822-1054-3398-721</div>
-                </div>
-            </div>
-            <div class="loadout-list" style="margin-top: 60px;">
-                <div class="weapon-entry reveal" style="border-left: 4px solid var(--master);">
-                    <div class="weapon-label" style="font-size: 0.6rem; color: var(--text-dim);">RANK_STATUS</div>
-                    <div class="weapon-name" style="font-size: 1.5rem; color: var(--master); margin: 10px 0;">MASTER III</div>
-                    <div class="stat-bar-container"><div class="stat-fill" data-width="85%"></div></div>
-                </div>
-                <div class="weapon-entry reveal" style="border-left: 4px solid var(--legendary); transition-delay: 0.2s;">
-                    <div class="weapon-label" style="font-size: 0.6rem; color: var(--text-dim);">PEAK_HISTORY</div>
-                    <div class="weapon-name" style="font-size: 1.5rem; color: var(--legendary); margin: 10px 0;">LEGENDARY</div>
-                    <div class="stat-bar-container"><div class="stat-fill" data-width="100%"></div></div>
                 </div>
             </div>
         </div>
@@ -537,5 +504,45 @@
         const weaponData = [
             { name: "LW3-Tundra - Night", rank: "META", color: "#5ffb7e", atts: ["Combat Stock", "Tiger Team", "Fast Mag"] },
             { name: "Kilo 141 - Demonsong", rank: "MYTHIC", color: "#ff0055", atts: ["OWC Marksman", "No Stock", "OWC Laser"] },
-            { name: "Switchblade X9 - Neon", rank: "MYTHIC", color: "#ff00ff", atts: ["Mono Supp", "MIP Ligh
+            { name: "Switchblade X9 - Neon", rank: "MYTHIC", color: "#ff00ff", atts: ["Mono Supp", "MIP Light", "OWC Laser"] },
+            { name: "SKS - Diamond", rank: "DIAMOND", color: "#b9f2ff", atts: ["MIP Light", "No Stock", "10 Rnd Mag"] },
+            { name: "DL Q33 - Bass Booster", rank: "EPIC", color: "#a335ee", atts: ["OWC Light Supp", "Combat Stock", "FMJ"] },
+            { name: "CX9 - Hollow Point", rank: "LEGENDARY", color: "#ffaa00", atts: ["CX9-S Supp", "CX3 Stock", "50 Rnd Drum"] },
+            { name: "Grau 5.56 - Core", rank: "META", color: "#5ffb7e", atts: ["Tempus Archangel", "No Stock", "50 Rnd Mag"] },
+            { name: "Locus - Electron", rank: "LEGENDARY", color: "#ffaa00", atts: ["Light Supp", "Light Stock", "OWC Laser"] }
+        ];
 
+        // Ensure everything runs only after DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            const bootScreen = document.getElementById('boot-screen');
+            const progress = document.getElementById('boot-progress');
+            const mainUi = document.getElementById('main-ui');
+            let width = 0;
+
+            // Failsafe: Force show UI after 5 seconds if boot hangs
+            const forceShow = setTimeout(() => finishBoot(), 5000);
+
+            function finishBoot() {
+                clearInterval(bootInterval);
+                clearTimeout(forceShow);
+                bootScreen.classList.add('shutdown');
+                setTimeout(() => {
+                    bootScreen.style.display = 'none';
+                    mainUi.classList.add('active');
+                    document.body.style.overflow = 'auto';
+                }, 800);
+            }
+
+            const bootInterval = setInterval(() => {
+                if (width >= 100) {
+                    finishBoot();
+                } else {
+                    width += Math.random() * 20;
+                    if (width > 100) width = 100;
+                    progress.style.width = width + '%';
+                }
+            }, 150);
+
+            // Populate Loadout
+            const grid = document.getElementById('arsenal-grid');
+       
